@@ -310,17 +310,30 @@ function setStatus(s) {
   else if (s === 'speaking')  { document.getElementById('i-wave').style.display = ''; btn.classList.add('speaking'); }
 }
 
-// ── WATCHDOG — 10 sn sonra otomatik sıfırla ──
+// ── WATCHDOG — 18 sn sonra otomatik sıfırla (2 deneme × 7sn + buffer) ──
+let countdownInterval = null;
 function startWatchdog() {
   clearTimeout(watchdog);
-  watchdog = setTimeout(() => {
+  clearInterval(countdownInterval);
+  let secs = 0;
+  countdownInterval = setInterval(() => {
+    secs++;
     if (appStatus === 'thinking') {
-      showErr('Yanıt gelmedi, otomatik sıfırlandı.');
-      doReset();
+      document.getElementById('status-lbl').textContent = 'Yanıt bekleniyor… ' + secs + 's';
     }
-  }, 10000);
+  }, 1000);
+  watchdog = setTimeout(() => {
+    clearInterval(countdownInterval);
+    if (appStatus === 'thinking') {
+      showErr('Yanıt alınamadı. Tekrar dene veya sıfırla.');
+      setStatus('idle');
+    }
+  }, 18000);
 }
-function clearWatchdog() { clearTimeout(watchdog); }
+function clearWatchdog() {
+  clearTimeout(watchdog);
+  clearInterval(countdownInterval);
+}
 
 // ── MESSAGES ──
 function addMsg(role, text) {
@@ -348,8 +361,7 @@ function showErr(m) {
 }
 
 // ── API ──
-async function callGroq(text) {
-  history.push({ role: 'user', content: text });
+async function fetchGroq() {
   const p1 = fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY },
@@ -360,14 +372,33 @@ async function callGroq(text) {
       temperature: 0.6
     })
   });
-  const p2 = new Promise((_, rej) => setTimeout(() => rej(new Error('Zaman aşımı (10s)')), 9500));
+  const p2 = new Promise((_, rej) => setTimeout(() => rej(new Error('Zaman aşımı')), 7000));
   const res = await Promise.race([p1, p2]);
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
   const reply = data.choices?.[0]?.message?.content?.trim();
   if (!reply) throw new Error('Boş yanıt');
-  history.push({ role: 'assistant', content: reply });
   return reply;
+}
+
+async function callGroq(text) {
+  history.push({ role: 'user', content: text });
+  let lastErr = null;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const reply = await fetchGroq();
+      history.push({ role: 'assistant', content: reply });
+      return reply;
+    } catch(e) {
+      lastErr = e;
+      if (attempt < 2) {
+        document.getElementById('status-lbl').textContent = 'Tekrar deneniyor…';
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
+  }
+  history.pop();
+  throw lastErr;
 }
 
 // ── TTS ──
