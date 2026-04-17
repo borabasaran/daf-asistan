@@ -183,7 +183,7 @@
       <span id="icon-spin" class="spin" style="display:none; font-size:24px; line-height:1;">⟳</span>
     </button>
     <div class="hint" id="hint-text">Basılı tut → konuş → bırak</div>
-    <button id="reset-btn" style="display:none;background:none;border:none;color:#475569;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline;padding:4px;" onclick="resetToIdle()">Takıldı mı? Sıfırla</button>
+    <button id="reset-btn" style="background:none;border:1px solid rgba(255,255,255,0.08);color:#475569;font-size:11px;cursor:pointer;font-family:inherit;padding:5px 12px;border-radius:6px;touch-action:manipulation;" onpointerdown="resetToIdle()">Sıfırla</button>
   </div>
 </div>
 
@@ -263,10 +263,10 @@ function setStatus(s) {
   label.style.color = colors[s] || '#94a3b8';
   hint.textContent = hints[s] !== undefined ? hints[s] : '';
   ['mic','wave','spin'].forEach(id => document.getElementById('icon-'+id).style.display = 'none');
-  btn.className = ''; btn.disabled = false; document.getElementById('reset-btn').style.display='none';
+  btn.className = ''; btn.disabled = false;
   if      (s === 'idle')      { document.getElementById('icon-mic').style.display = ''; }
   else if (s === 'listening') { document.getElementById('icon-mic').style.display = ''; btn.classList.add('listening'); }
-  else if (s === 'thinking')  { document.getElementById('icon-spin').style.display = ''; btn.classList.add('thinking'); btn.disabled = true; document.getElementById('reset-btn').style.display=''; }
+  else if (s === 'thinking')  { document.getElementById('icon-spin').style.display = ''; btn.classList.add('thinking'); btn.disabled = true; }
   else if (s === 'speaking')  { document.getElementById('icon-wave').style.display = ''; btn.classList.add('speaking'); }
 }
 
@@ -297,27 +297,27 @@ function showError(msg) {
 // API
 async function callGroq(userText) {
   history.push({ role: 'user', content: userText });
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
-  let res;
-  try {
-    res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'system', content: SYSTEM }, ...history],
-        max_tokens: 120,
-        temperature: 0.65
-      })
-    });
-  } finally {
-    clearTimeout(timeout);
-  }
+
+  const fetchPromise = fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'system', content: SYSTEM }, ...history],
+      max_tokens: 120,
+      temperature: 0.65
+    })
+  });
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Zaman asimi. Tekrar dene.')), 12000)
+  );
+
+  const res = await Promise.race([fetchPromise, timeoutPromise]);
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
-  const text = data.choices[0].message.content;
+  const text = data.choices[0]?.message?.content;
+  if (!text) throw new Error('Bos yanit.');
   history.push({ role: 'assistant', content: text });
   return text;
 }
@@ -403,19 +403,25 @@ function pressMic() {
 
 function releaseMic() {
   if (status !== 'listening') return;
-  if (recognition) { recognition.stop(); recognition = null; }
+  if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
   const text = collectedText.trim();
   setLive('');
   if (!text) { setStatus('idle'); return; }
   addMessage('user', text);
   setStatus('thinking');
+
   callGroq(text)
     .then(reply => {
       addMessage('assistant', reply);
       setStatus('speaking');
       speak(reply, () => setStatus('idle'));
     })
-    .catch(err => { const msg = err.name==='AbortError' ? 'Zaman aşımı. Tekrar dene.' : 'Yanıt alınamadı: ' + err.message; showError(msg); history.pop(); setStatus('idle'); });
+    .catch(err => {
+      // Remove the user message we just added since we got no reply
+      if (history.length > 0 && history[history.length-1].role === 'user') history.pop();
+      showError('Yanit alinamadi: ' + err.message + ' — Sifirla butonuna bas.');
+      setStatus('idle');
+    });
 }
 </script>
 </body>
