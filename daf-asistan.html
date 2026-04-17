@@ -526,17 +526,9 @@ function pressMic() {
     if (appStatus === 'listening') setStatus('idle');
   };
 
-  // onend her zaman son onresult'tan SONRA gelir
-  // Metni burada okuyoruz — race condition yok
   r.onend = () => {
     rec = null;
-    if (releasing) {
-      releasing = false;
-      processText((collected || lastInterim).trim());
-      lastInterim = '';
-    } else {
-      if (appStatus === 'listening') setStatus('idle');
-    }
+    if (!releasing && appStatus === 'listening') setStatus('idle');
   };
 
   try { r.start(); } catch { showErr('Mikrofon başlatılamadı.'); }
@@ -545,8 +537,14 @@ function pressMic() {
 function releaseMic() {
   if (appStatus !== 'listening') return;
   releasing = true;
-  if (rec) { try { rec.stop(); } catch(e){} }
-  // İşlem onend'e devredildi — o geldiğinde her final sonuç hazır olur
+  if (rec) { try { rec.stop(); } catch(e){} rec = null; }
+  // 400ms bekle: tarayıcı async final sonuçları göndersin
+  setTimeout(() => {
+    if (!releasing) return;
+    releasing = false;
+    processText((collected || lastInterim).trim());
+    lastInterim = '';
+  }, 400);
 }
 
 // ── TEXT INPUT ──
