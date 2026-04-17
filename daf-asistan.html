@@ -11,6 +11,8 @@
     font-family: system-ui, -apple-system, sans-serif;
     height: 100dvh; overflow: hidden; display: flex; flex-direction: column;
   }
+
+  /* ── SETUP ── */
   #setup {
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 20px;
@@ -23,22 +25,12 @@
     border: 1px solid rgba(251,191,36,0.3); border-radius: 24px;
     font-size: 11px; color: #fbbf24; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;
   }
-  .field { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
-  .field label { font-size: 12px; color: #64748b; }
-  .field input {
-    padding: 12px 14px; background: #1e293b;
-    border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
-    color: #f1f5f9; font-size: 15px; outline: none; font-family: inherit; width: 100%;
-  }
-  .field input:focus { border-color: rgba(251,191,36,0.5); }
-  .field p { font-size: 11.5px; color: #475569; line-height: 1.65; }
-  .field a { color: #60a5fa; }
   .steps {
     width: 100%; max-width: 340px; background: #1e293b;
     border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;
     padding: 14px 16px; text-align: left;
   }
-  .steps p { font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 500; }
+  .steps-title { font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 500; }
   .steps ol { padding-left: 18px; display: flex; flex-direction: column; gap: 5px; }
   .steps li { font-size: 12px; color: #64748b; line-height: 1.5; }
   .steps a { color: #60a5fa; }
@@ -47,13 +39,24 @@
     background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3);
     border-radius: 4px; font-size: 10px; color: #4ade80; font-weight: 600; margin-left: 4px;
   }
+  .field { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+  .field label { font-size: 12px; color: #64748b; }
+  .field input {
+    padding: 12px 14px; background: #1e293b;
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    color: #f1f5f9; font-size: 15px; outline: none; font-family: inherit; width: 100%;
+  }
+  .field input:focus { border-color: rgba(251,191,36,0.5); }
+  .field small { font-size: 11.5px; color: #475569; line-height: 1.65; }
   .btn-primary {
     padding: 14px 42px; background: #fbbf24; color: #0f172a;
     border: none; border-radius: 40px; font-size: 15px; font-weight: 700;
     cursor: pointer; font-family: inherit; touch-action: manipulation; transition: opacity 0.15s;
   }
   .btn-primary:active { opacity: 0.85; }
+  #setup-error { display: none; color: #fca5a5; font-size: 13px; max-width: 340px; }
 
+  /* ── CHAT ── */
   #chat { display: none; flex-direction: column; height: 100dvh; }
   #topbar {
     padding: 12px 18px 8px; border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -67,62 +70,68 @@
     flex: 1; overflow-y: auto; padding: 14px 12px;
     display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth;
   }
-  .bubble { max-width: 88%; padding: 10px 14px; font-size: 14.5px; line-height: 1.7; animation: fadeUp 0.2s ease; }
-  .bubble.user {
+  .msg { max-width: 88%; padding: 10px 14px; font-size: 14.5px; line-height: 1.7; animation: fadeUp 0.2s ease; }
+  .msg.user {
     align-self: flex-end; background: #132318;
     border: 1px solid rgba(74,222,128,0.2); color: #bbf7d0;
     border-radius: 14px 3px 14px 14px;
   }
-  .bubble.assistant {
+  .msg.bot {
     align-self: flex-start; background: #1e293b;
     border: 1px solid rgba(251,191,36,0.12); color: #e2e8f0;
     border-radius: 3px 14px 14px 14px;
   }
-  .bubble.correction {
-    align-self: flex-start; background: #1a1a2e;
-    border: 1px solid rgba(251,191,36,0.35); color: #fde68a;
-    border-radius: 3px 14px 14px 14px;
-    font-size: 13.5px;
+  .msg.correction {
+    align-self: flex-start; background: rgba(251,191,36,0.06);
+    border: 1px solid rgba(251,191,36,0.3); color: #fde68a;
+    border-radius: 3px 14px 14px 14px; font-size: 13.5px;
   }
-  .bubble.live {
+  .msg.live {
     align-self: flex-end; background: rgba(19,35,24,0.5);
-    border: 1px dashed rgba(74,222,128,0.25); color: rgba(187,247,208,0.5);
+    border: 1px dashed rgba(74,222,128,0.2); color: rgba(187,247,208,0.45);
     border-radius: 14px 3px 14px 14px; font-style: italic; font-size: 13px;
   }
-  #error-bar {
-    display: none; align-self: center; padding: 7px 14px;
+  #err-bar {
+    display: none; align-self: center; padding: 8px 16px;
     background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
     border-radius: 8px; font-size: 12.5px; color: #fca5a5; text-align: center; max-width: 90%;
   }
 
+  /* ── CONTROLS ── */
   #controls {
-    padding: 12px 14px 28px; border-top: 1px solid rgba(255,255,255,0.06);
-    display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0;
+    padding: 10px 14px 24px; border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0;
   }
-  #status-label {
+  #status-lbl {
     font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
     font-weight: 500; color: #94a3b8; transition: color 0.3s; text-align: center; min-height: 14px;
   }
   #mic-btn {
-    width: 80px; height: 80px; border-radius: 50%;
+    width: 78px; height: 78px; border-radius: 50%;
     background: #1e293b; border: 2px solid rgba(251,191,36,0.4); color: #fbbf24;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; outline: none;
     transition: background 0.15s, border-color 0.15s, transform 0.1s;
     touch-action: manipulation; user-select: none; -webkit-user-select: none; flex-shrink: 0;
   }
-  #mic-btn:disabled { opacity: 0.35; cursor: default; }
+  #mic-btn:disabled { opacity: 0.32; cursor: default; }
   #mic-btn.listening {
-    background: rgba(74,222,128,0.15); border-color: #4ade80; color: #4ade80;
-    transform: scale(1.08); animation: pulse 1.5s ease-in-out infinite;
+    background: rgba(74,222,128,0.12); border-color: #4ade80; color: #4ade80;
+    transform: scale(1.07); animation: pulse 1.6s ease-in-out infinite;
   }
-  #mic-btn.speaking  { background: rgba(96,165,250,0.1); border-color: rgba(96,165,250,0.45); color: #60a5fa; }
-  #mic-btn.thinking  { border-color: rgba(100,116,139,0.3); color: #64748b; }
-  .hint { font-size: 11px; color: #334155; text-align: center; line-height: 1.5; max-width: 260px; }
+  #mic-btn.speaking { background: rgba(96,165,250,0.1); border-color: rgba(96,165,250,0.4); color: #60a5fa; }
+  #mic-btn.thinking { border-color: rgba(100,116,139,0.25); color: #64748b; }
+  #hint { font-size: 11px; color: #334155; text-align: center; line-height: 1.5; max-width: 260px; min-height: 14px; }
+  #reset-btn {
+    background: none; border: 1px solid rgba(255,255,255,0.07); color: #475569;
+    font-size: 11px; cursor: pointer; font-family: inherit;
+    padding: 5px 14px; border-radius: 6px; touch-action: manipulation;
+  }
+  #reset-btn:active { opacity: 0.7; }
 
   @keyframes fadeUp { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes pulse  { 0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.4); } 50% { box-shadow: 0 0 0 14px rgba(74,222,128,0); } }
-  @keyframes spin   { to { transform: rotate(360deg); } }
+  @keyframes pulse  { 0%,100% { box-shadow:0 0 0 0 rgba(74,222,128,0.4); } 50% { box-shadow:0 0 0 14px rgba(74,222,128,0); } }
+  @keyframes spin   { to { transform:rotate(360deg); } }
   .spin { animation: spin 1s linear infinite; display: inline-block; }
   ::-webkit-scrollbar { width: 3px; }
   ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
@@ -137,19 +146,22 @@
     <div class="sub">Sesli Pratik · Almanca</div>
   </div>
   <div class="badge">B2 · Aktuelle Themen · Karma-Korrektur</div>
+
   <div class="steps">
-    <p>Groq API anahtarı <span class="free-tag">ÜCRETSİZ</span></p>
+    <div class="steps-title">Groq API anahtarı <span class="free-tag">ÜCRETSİZ</span></div>
     <ol>
-      <li><a href="https://console.groq.com" target="_blank">console.groq.com</a> → Google ile kayıt ol</li>
+      <li><a href="https://console.groq.com" target="_blank">console.groq.com</a> → Google ile giriş yap</li>
       <li>API Keys → Create API Key → kopyala</li>
     </ol>
   </div>
+
   <div class="field">
     <label>Groq API Anahtarı</label>
-    <input type="password" id="api-key-input" placeholder="gsk_..." autocomplete="off" />
-    <p>Kredi kartı gerekmez. Günde 14.000 ücretsiz istek.</p>
+    <input type="password" id="keyInput" placeholder="gsk_..." autocomplete="off" />
+    <small>Kredi kartı gerekmez. Günde 14.000 ücretsiz istek.</small>
   </div>
-  <div id="setup-error" style="display:none; color:#fca5a5; font-size:13px; max-width:340px;"></div>
+
+  <div id="setup-error"></div>
   <button class="btn-primary" onclick="startChat()">Başla</button>
 </div>
 
@@ -162,266 +174,299 @@
     </div>
     <div id="conn-dot"></div>
   </div>
-  <div id="messages"><div id="error-bar"></div></div>
+
+  <div id="messages"><div id="err-bar"></div></div>
+
   <div id="controls">
-    <div id="status-label">Hazırlanıyor…</div>
+    <div id="status-lbl"></div>
     <button id="mic-btn" disabled
       onpointerdown="pressMic()"
       onpointerup="releaseMic()"
       onpointerleave="releaseMic()">
-      <svg id="icon-mic" xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+      <svg id="i-mic" xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
         <rect x="9" y="2" width="6" height="13" rx="3"/>
         <path d="M5 10a7 7 0 0 0 14 0"/>
         <line x1="12" y1="19" x2="12" y2="22"/>
         <line x1="8" y1="22" x2="16" y2="22"/>
       </svg>
-      <svg id="icon-wave" style="display:none" xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24">
+      <svg id="i-wave" style="display:none" xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24">
         <path d="M11 5L6 9H2v6h4l5 4V5z"/>
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
       </svg>
-      <span id="icon-spin" class="spin" style="display:none; font-size:24px; line-height:1;">⟳</span>
+      <span id="i-spin" class="spin" style="display:none;font-size:24px;line-height:1;">⟳</span>
     </button>
-    <div class="hint" id="hint-text">Basılı tut → konuş → bırak</div>
-    <button id="reset-btn" style="background:none;border:1px solid rgba(255,255,255,0.08);color:#475569;font-size:11px;cursor:pointer;font-family:inherit;padding:5px 12px;border-radius:6px;touch-action:manipulation;" onpointerdown="resetToIdle()">Sıfırla</button>
+    <div id="hint">Basılı tut → konuş → bırak</div>
+    <button id="reset-btn" onpointerdown="doReset()">↺ Sıfırla</button>
   </div>
 </div>
 
 <script>
-const SYSTEM = `Du bist ein geduldiger DaF-Sprachtutor. Deine Lernenden sind auf Niveau B2.
+// ─────────────────────────────────────────
+// SİSTEM PROMPT — düzgün Almanca karakterler
+// ─────────────────────────────────────────
+const SYSTEM = `Du bist ein geduldiger DaF-Sprachtutor für Lernende auf Niveau B2.
 
-SPRACHE strikt einhalten:
-Maximal 8 Woerter pro Satz. Maximal 2 Saetze pro Antwort. Nur allgemeine B2-Woerter. Langsam und klar formulieren.
+SPRACHE — strikt einhalten:
+- Maximal 8 Wörter pro Satz
+- Maximal 2 Sätze pro Antwort
+- Einfache, häufige Wörter
+- Immer korrekte deutsche Rechtschreibung: ü, ö, ä, ß
 
-THEMEN: Klimawandel, Kuenstliche Intelligenz, Alltag und Technik, Schule, soziale Medien.
+THEMEN: Klimawandel, Künstliche Intelligenz, Alltag, Schule, soziale Medien
 
-GESPRAECH: Jede Antwort mit einer kurzen einfachen Frage beenden. Direkt auf das Gesagte eingehen.
+GESPRÄCHSFÜHRUNG:
+- Jede Antwort mit einer kurzen einfachen Frage beenden
+- Direkt auf das Gesagte eingehen
+- Warm und ermutigend sprechen
 
-FEHLERKORREKTUR ist sehr wichtig. Nutze immer dieses feste Format wenn ein Fehler vorkommt:
+FEHLERKORREKTUR — immer nach diesem festen Format:
 
-Grammatikfehler (Zeitform, Verbform, Satzbau):
-Schreibe zuerst: KORREKTUR: [korrekte Form]. [Eine kurze Regel in einem Satz]. Dann stelle eine Frage weiter.
+Bei Grammatikfehlern (Zeitform, Verbform, Satzbau, Wortstellung):
+Schreibe: "✏ Richtig: [korrekte Form]. [Eine kurze Erklärung]. [Dann eine Frage]."
 
-Beispiel 1:
-Lernender: Ich habe gestern ins Kino gegangen.
-Tutor: KORREKTUR: Richtig heisst es ich bin gegangen. Bei Bewegungsverben nutzen wir sein. Und was hast du im Kino gesehen?
+Beispiel:
+Lernende/r: Ich habe gestern ins Kino gegangen.
+Tutor: ✏ Richtig: Ich bin gegangen. Bewegungsverben brauchen "sein". Welchen Film hast du gesehen?
 
-Beispiel 2:
-Lernender: Das Wetter ist sehr schoen heute.
-Tutor: (kein Fehler, direkt antworten) Ja das stimmt. Gutes Wetter macht uns gluecklich. Bist du heute draussen gewesen?
+Bei Aussprachehinweisen:
+Schreibe: "🔊 Aussprache: [Wort] spricht man [Hinweis] aus."
 
-Aussprachehinweis wenn noetig:
-Schreibe: AUSSPRACHE: Das Wort [Wort] spricht man [Hinweis] aus. Dann weiter.
+Kleine Fehler wie falscher Artikel allein: schweigend korrigieren (Recast), kein Kommentar.
 
-Kleine Fehler wie falscher Artikel allein nicht korrigieren.
+WICHTIG: Nur Deutsch. Keine langen Sätze. Kein Englisch.`;
 
-WICHTIG: Nur Deutsch. Keine Emojis. Keine Sonderzeichen. Keine Bindestriche.`;
-
+// ─────────────────────────────────────────
 let API_KEY = '';
 let history = [];
-let status = 'idle';
-let recognition = null;
-let collectedText = '';
+let appStatus = 'idle';
+let rec = null;
+let collected = '';
+let watchdog = null;
 const synth = window.speechSynthesis;
+let deVoice = null;
+
+// ── SETUP ──
+document.getElementById('keyInput').addEventListener('keydown', e => { if (e.key === 'Enter') startChat(); });
 
 function startChat() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key) { showSetupError('API anahtarı gerekli.'); return; }
-  API_KEY = key;
+  const k = document.getElementById('keyInput').value.trim();
+  if (!k) { setSetupErr('API anahtarı gerekli.'); return; }
+  API_KEY = k;
   document.getElementById('setup').style.display = 'none';
   document.getElementById('chat').style.display = 'flex';
-  loadVoices();
-  initGreeting();
+  initVoices();
+  greet();
 }
-document.getElementById('api-key-input').addEventListener('keydown', e => { if (e.key === 'Enter') startChat(); });
-function showSetupError(msg) { const el = document.getElementById('setup-error'); el.textContent = msg; el.style.display = 'block'; }
+function setSetupErr(m) { const e = document.getElementById('setup-error'); e.textContent = m; e.style.display = 'block'; }
 
-// VOICES
-let germanVoice = null;
-function loadVoices() {
+// ── VOICES ──
+function initVoices() {
   const pick = () => {
-    const voices = synth.getVoices();
-    germanVoice =
-      voices.find(v => v.lang === 'de-DE' && /natural|neural|premium|enhanced/i.test(v.name)) ||
-      voices.find(v => v.lang === 'de-DE') ||
-      voices.find(v => v.lang.startsWith('de')) || null;
+    const all = synth.getVoices();
+    deVoice =
+      all.find(v => v.lang === 'de-DE' && /natural|neural|premium|enhanced/i.test(v.name)) ||
+      all.find(v => v.lang === 'de-DE') ||
+      all.find(v => v.lang.startsWith('de')) || null;
   };
   pick();
   synth.onvoiceschanged = pick;
 }
 
-// STATUS
+// ── STATUS ──
+const LABELS = {
+  idle:     'Basılı tut ve konuş',
+  listening:'Dinliyorum — parmağını kaldır',
+  thinking: 'Düşünüyor…',
+  speaking: 'Konuşuyor — durdurmak için bas'
+};
+const COLORS = { idle:'#94a3b8', listening:'#4ade80', thinking:'#fbbf24', speaking:'#60a5fa' };
+const HINTS  = {
+  idle:     'Basılı tut → konuş → bırak',
+  listening:'Konuşmayı bitirince parmağını kaldır',
+  thinking: '',
+  speaking: ''
+};
+
 function setStatus(s) {
-  status = s;
+  appStatus = s;
   const btn = document.getElementById('mic-btn');
-  const label = document.getElementById('status-label');
-  const hint = document.getElementById('hint-text');
-  const labels   = { idle:'Basılı tut ve konuş', listening:'Dinliyorum…', thinking:'Düşünüyor…', speaking:'Konuşuyor — dokunarak durdur' };
-  const colors   = { idle:'#94a3b8', listening:'#4ade80', thinking:'#fbbf24', speaking:'#60a5fa' };
-  const hints    = { idle:'Basılı tut → konuş → bırak', listening:'Konuşmayı bitirince parmağını kaldır', thinking:'', speaking:'' };
-  label.textContent = labels[s] || '';
-  label.style.color = colors[s] || '#94a3b8';
-  hint.textContent = hints[s] !== undefined ? hints[s] : '';
-  ['mic','wave','spin'].forEach(id => document.getElementById('icon-'+id).style.display = 'none');
+  document.getElementById('status-lbl').textContent = LABELS[s] || '';
+  document.getElementById('status-lbl').style.color  = COLORS[s] || '#94a3b8';
+  document.getElementById('hint').textContent = HINTS[s] !== undefined ? HINTS[s] : '';
+  ['i-mic','i-wave','i-spin'].forEach(id => document.getElementById(id).style.display = 'none');
   btn.className = ''; btn.disabled = false;
-  if      (s === 'idle')      { document.getElementById('icon-mic').style.display = ''; }
-  else if (s === 'listening') { document.getElementById('icon-mic').style.display = ''; btn.classList.add('listening'); }
-  else if (s === 'thinking')  { document.getElementById('icon-spin').style.display = ''; btn.classList.add('thinking'); btn.disabled = true; }
-  else if (s === 'speaking')  { document.getElementById('icon-wave').style.display = ''; btn.classList.add('speaking'); }
+  if      (s === 'idle')      { document.getElementById('i-mic').style.display  = ''; }
+  else if (s === 'listening') { document.getElementById('i-mic').style.display  = ''; btn.classList.add('listening'); }
+  else if (s === 'thinking')  { document.getElementById('i-spin').style.display = ''; btn.classList.add('thinking'); btn.disabled = true; startWatchdog(); }
+  else if (s === 'speaking')  { document.getElementById('i-wave').style.display = ''; btn.classList.add('speaking'); }
 }
 
-// MESSAGES
-function addMessage(role, text) {
-  // Detect correction bubbles
-  const isCorrection = /^KORREKTUR:|^AUSSPRACHE:/i.test(text.trim());
+// ── WATCHDOG — 10 sn sonra otomatik sıfırla ──
+function startWatchdog() {
+  clearTimeout(watchdog);
+  watchdog = setTimeout(() => {
+    if (appStatus === 'thinking') {
+      showErr('Yanıt gelmedi, otomatik sıfırlandı.');
+      doReset();
+    }
+  }, 10000);
+}
+function clearWatchdog() { clearTimeout(watchdog); }
+
+// ── MESSAGES ──
+function addMsg(role, text) {
+  const isCorrection = /^✏|^🔊/.test(text.trim());
   const div = document.createElement('div');
-  div.className = 'bubble ' + (isCorrection ? 'correction' : role);
+  div.className = 'msg ' + (isCorrection ? 'correction' : role === 'user' ? 'user' : 'bot');
   div.textContent = text;
   const msgs = document.getElementById('messages');
-  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
 }
 let liveBubble = null;
-function setLive(text) {
+function setLive(t) {
   const msgs = document.getElementById('messages');
-  if (!text) { if (liveBubble) { liveBubble.remove(); liveBubble = null; } return; }
-  if (!liveBubble) { liveBubble = document.createElement('div'); liveBubble.className = 'bubble live'; msgs.appendChild(liveBubble); }
-  liveBubble.textContent = text; msgs.scrollTop = msgs.scrollHeight;
+  if (!t) { if (liveBubble) { liveBubble.remove(); liveBubble = null; } return; }
+  if (!liveBubble) { liveBubble = document.createElement('div'); liveBubble.className = 'msg live'; msgs.appendChild(liveBubble); }
+  liveBubble.textContent = t;
+  msgs.scrollTop = msgs.scrollHeight;
 }
-function showError(msg) {
-  const el = document.getElementById('error-bar');
-  if (!msg) { el.style.display = 'none'; return; }
-  el.textContent = msg; el.style.display = 'block';
+function showErr(m) {
+  const el = document.getElementById('err-bar');
+  if (!m) { el.style.display = 'none'; return; }
+  el.textContent = m; el.style.display = 'block';
   document.getElementById('messages').scrollTop = 999999;
 }
 
-// API
-async function callGroq(userText) {
-  history.push({ role: 'user', content: userText });
-
-  const fetchPromise = fetch('https://api.groq.com/openai/v1/chat/completions', {
+// ── API ──
+async function callGroq(text) {
+  history.push({ role: 'user', content: text });
+  const p1 = fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY },
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'system', content: SYSTEM }, ...history],
-      max_tokens: 120,
-      temperature: 0.65
+      max_tokens: 100,
+      temperature: 0.6
     })
   });
-
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('Zaman asimi. Tekrar dene.')), 12000)
-  );
-
-  const res = await Promise.race([fetchPromise, timeoutPromise]);
+  const p2 = new Promise((_, rej) => setTimeout(() => rej(new Error('Zaman aşımı (10s)')), 9500));
+  const res = await Promise.race([p1, p2]);
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
-  const text = data.choices[0]?.message?.content;
-  if (!text) throw new Error('Bos yanit.');
-  history.push({ role: 'assistant', content: text });
-  return text;
+  const reply = data.choices?.[0]?.message?.content?.trim();
+  if (!reply) throw new Error('Boş yanıt');
+  history.push({ role: 'assistant', content: reply });
+  return reply;
 }
 
-function resetToIdle() {
-  if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
-  synth.cancel();
-  collectedText = '';
-  setLive('');
-  showError('');
-  history = [];
-  setStatus('idle');
-  addMessage('assistant', 'Konusma sifirlandı. Yeniden baslayabiliriz. Worüber möchtest du heute sprechen?');
-}
-
-// TTS
-function cleanForSpeech(text) {
-  return text
+// ── TTS ──
+function cleanTTS(t) {
+  return t
+    .replace(/✏\s*/g, '')
+    .replace(/🔊\s*/g, '')
     .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
     .replace(/[\u2600-\u27BF]/gu, '')
-    .replace(/KORREKTUR:/gi, 'Korrektur.')
-    .replace(/AUSSPRACHE:/gi, 'Aussprache-Hinweis.')
-    .replace(/[*#\-–→←•]/g, ' ')
-    .replace(/\s{2,}/g, ' ').trim();
+    .replace(/[*#→←•]/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 function speak(text, onEnd) {
   synth.cancel();
-  const utt = new SpeechSynthesisUtterance(cleanForSpeech(text));
+  const utt = new SpeechSynthesisUtterance(cleanTTS(text));
   utt.lang = 'de-DE';
-  utt.rate = 0.75;
+  utt.rate = 0.74;
   utt.pitch = 1.0;
-  if (germanVoice) utt.voice = germanVoice;
-  utt.onend = () => onEnd && onEnd();
-  utt.onerror = () => onEnd && onEnd();
+  if (deVoice) utt.voice = deVoice;
+  utt.onend  = () => { clearWatchdog(); onEnd && onEnd(); };
+  utt.onerror = () => { clearWatchdog(); onEnd && onEnd(); };
   synth.speak(utt);
 }
 
-// INIT
-function initGreeting() {
+// ── GREETING ──
+function greet() {
   setStatus('thinking');
-  callGroq('Begruesse mich kurz auf Deutsch. Stelle dann eine einfache Frage zu einem aktuellen Thema. Maximal 2 kurze Saetze. Kein Emoji.')
-    .then(text => {
+  callGroq('Begrüße mich kurz auf Deutsch. Stelle dann eine einfache Frage zu einem aktuellen Thema. Maximal 2 kurze Sätze. Keine Emojis.')
+    .then(t => {
+      clearWatchdog();
       document.getElementById('conn-dot').style.background = '#4ade80';
-      addMessage('assistant', text);
+      addMsg('bot', t);
       setStatus('speaking');
-      speak(text, () => setStatus('idle'));
+      speak(t, () => setStatus('idle'));
     })
     .catch(err => {
+      clearWatchdog();
       document.getElementById('conn-dot').style.background = '#ef4444';
-      showError('API hatası: ' + err.message);
+      showErr('Bağlantı hatası: ' + err.message);
       setStatus('idle');
     });
 }
 
-// PUSH TO TALK
+// ── PUSH TO TALK ──
 function pressMic() {
-  if (status === 'thinking') return;
-  if (status === 'speaking') { synth.cancel(); setStatus('idle'); return; }
-  if (status !== 'idle') return;
-  showError('');
-  collectedText = '';
+  if (appStatus === 'thinking') return;
+  if (appStatus === 'speaking') { synth.cancel(); clearWatchdog(); setStatus('idle'); return; }
+  if (appStatus !== 'idle') return;
+  showErr('');
+  collected = '';
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showError('Chrome tarayıcısı gerekli.'); return; }
-  const rec = new SR();
-  rec.lang = 'de-DE'; rec.continuous = true; rec.interimResults = true;
-  recognition = rec;
-  rec.onstart = () => setStatus('listening');
-  rec.onresult = e => {
-    let interim = '', finals = '';
+  if (!SR) { showErr('Chrome gerekli.'); return; }
+  const r = new SR();
+  r.lang = 'de-DE'; r.continuous = true; r.interimResults = true;
+  rec = r;
+  r.onstart = () => setStatus('listening');
+  r.onresult = e => {
+    let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) finals += e.results[i][0].transcript + ' ';
+      if (e.results[i].isFinal) collected += e.results[i][0].transcript + ' ';
       else interim += e.results[i][0].transcript;
     }
-    if (finals) collectedText += finals;
-    setLive((collectedText + interim).trim());
+    setLive((collected + interim).trim());
   };
-  rec.onerror = e => {
-    if (e.error === 'not-allowed') showError('Mikrofon izni verilmedi.');
-    setLive(''); setStatus('idle');
+  r.onerror = e => {
+    if (e.error === 'not-allowed') showErr('Mikrofon izni verilmedi.');
+    setLive(''); if (appStatus === 'listening') setStatus('idle');
   };
-  try { rec.start(); } catch { showError('Mikrofon başlatılamadı.'); }
+  r.onend = () => { if (appStatus === 'listening') setStatus('idle'); };
+  try { r.start(); } catch { showErr('Mikrofon başlatılamadı.'); }
 }
 
 function releaseMic() {
-  if (status !== 'listening') return;
-  if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
-  const text = collectedText.trim();
+  if (appStatus !== 'listening') return;
+  if (rec) { try { rec.stop(); } catch(e){} rec = null; }
+  const text = collected.trim();
   setLive('');
   if (!text) { setStatus('idle'); return; }
-  addMessage('user', text);
+  addMsg('user', text);
   setStatus('thinking');
-
   callGroq(text)
     .then(reply => {
-      addMessage('assistant', reply);
+      clearWatchdog();
+      addMsg('bot', reply);
       setStatus('speaking');
       speak(reply, () => setStatus('idle'));
     })
     .catch(err => {
-      // Remove the user message we just added since we got no reply
-      if (history.length > 0 && history[history.length-1].role === 'user') history.pop();
-      showError('Yanit alinamadi: ' + err.message + ' — Sifirla butonuna bas.');
+      clearWatchdog();
+      if (history.length && history[history.length-1].role === 'user') history.pop();
+      showErr('Yanıt alınamadı: ' + err.message);
       setStatus('idle');
     });
+}
+
+// ── RESET ──
+function doReset() {
+  clearWatchdog();
+  if (rec) { try { rec.stop(); } catch(e){} rec = null; }
+  synth.cancel();
+  collected = '';
+  history = [];
+  setLive('');
+  showErr('');
+  setStatus('idle');
+  addMsg('bot', 'Konuşma sıfırlandı. Yeniden başlayabiliriz. Worüber möchtest du sprechen?');
 }
 </script>
 </body>
