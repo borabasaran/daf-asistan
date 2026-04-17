@@ -46,8 +46,7 @@
   .free-tag {
     display: inline-block; padding: 2px 8px;
     background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3);
-    border-radius: 4px; font-size: 10px; color: #4ade80; font-weight: 600;
-    letter-spacing: 0.05em; margin-left: 4px;
+    border-radius: 4px; font-size: 10px; color: #4ade80; font-weight: 600; margin-left: 4px;
   }
   .btn-primary {
     padding: 14px 42px; background: #fbbf24; color: #0f172a;
@@ -55,7 +54,6 @@
     cursor: pointer; font-family: inherit; touch-action: manipulation; transition: opacity 0.15s;
   }
   .btn-primary:active { opacity: 0.85; }
-  .btn-primary:disabled { background: #1e293b; color: #475569; cursor: default; }
 
   #chat { display: none; flex-direction: column; height: 100dvh; }
   #topbar {
@@ -83,7 +81,7 @@
   }
   .bubble.live {
     align-self: flex-end; background: rgba(19,35,24,0.5);
-    border: 1px dashed rgba(74,222,128,0.25); color: rgba(187,247,208,0.45);
+    border: 1px dashed rgba(74,222,128,0.25); color: rgba(187,247,208,0.5);
     border-radius: 14px 3px 14px 14px; font-style: italic; font-size: 13px;
   }
   #error-bar {
@@ -91,6 +89,7 @@
     background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
     border-radius: 8px; font-size: 12.5px; color: #fca5a5; text-align: center; max-width: 90%;
   }
+
   #controls {
     padding: 12px 14px 28px; border-top: 1px solid rgba(255,255,255,0.06);
     display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0;
@@ -99,21 +98,32 @@
     font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
     font-weight: 500; color: #94a3b8; transition: color 0.3s; text-align: center; min-height: 14px;
   }
+
+  /* Push-to-talk button */
   #mic-btn {
-    width: 70px; height: 70px; border-radius: 50%;
+    width: 80px; height: 80px; border-radius: 50%;
     background: #1e293b; border: 2px solid rgba(251,191,36,0.4); color: #fbbf24;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; outline: none; transition: background 0.2s, border-color 0.2s, color 0.2s;
+    cursor: pointer; outline: none;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
     touch-action: manipulation; user-select: none; -webkit-user-select: none; flex-shrink: 0;
   }
   #mic-btn:disabled { opacity: 0.35; cursor: default; }
-  #mic-btn.listening { background: rgba(74,222,128,0.1); border-color: #4ade80; color: #4ade80; animation: pulse 1.8s ease-in-out infinite; }
+  #mic-btn.listening {
+    background: rgba(74,222,128,0.15); border-color: #4ade80; color: #4ade80;
+    transform: scale(1.08);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
   #mic-btn.speaking  { background: rgba(96,165,250,0.1); border-color: rgba(96,165,250,0.45); color: #60a5fa; }
   #mic-btn.thinking  { border-color: rgba(100,116,139,0.3); color: #64748b; }
-  .hint { font-size: 11px; color: #334155; text-align: center; }
+
+  .hint {
+    font-size: 11px; color: #334155; text-align: center; line-height: 1.5;
+    max-width: 260px;
+  }
 
   @keyframes fadeUp { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes pulse  { 0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.35); } 50% { box-shadow: 0 0 0 12px rgba(74,222,128,0); } }
+  @keyframes pulse  { 0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.4); } 50% { box-shadow: 0 0 0 14px rgba(74,222,128,0); } }
   @keyframes spin   { to { transform: rotate(360deg); } }
   .spin { animation: spin 1s linear infinite; display: inline-block; }
   ::-webkit-scrollbar { width: 3px; }
@@ -131,23 +141,20 @@
   <div class="badge">B2 · Aktuelle Themen · Karma-Korrektur</div>
 
   <div class="steps">
-    <p>API anahtarı nasıl alınır? <span class="free-tag">ÜCRETSİZ</span></p>
+    <p>Groq API anahtarı <span class="free-tag">ÜCRETSİZ</span></p>
     <ol>
-      <li><a href="https://console.groq.com" target="_blank">console.groq.com</a> adresine git</li>
-      <li>Google hesabınla kayıt ol</li>
-      <li><strong>API Keys → Create API Key</strong></li>
-      <li>Anahtarı kopyala, aşağıya yapıştır</li>
+      <li><a href="https://console.groq.com" target="_blank">console.groq.com</a> → Google ile kayıt ol</li>
+      <li>API Keys → Create API Key → kopyala</li>
     </ol>
   </div>
 
   <div class="field">
     <label>Groq API Anahtarı</label>
     <input type="password" id="api-key-input" placeholder="gsk_..." autocomplete="off" />
-    <p>Kredi kartı gerekmez. Günde 14.000 ücretsiz istek kotası var.</p>
+    <p>Kredi kartı gerekmez. Günde 14.000 ücretsiz istek.</p>
   </div>
 
   <div id="setup-error" style="display:none; color:#fca5a5; font-size:13px; max-width:340px;"></div>
-
   <button class="btn-primary" onclick="startChat()">Başla</button>
 </div>
 
@@ -156,7 +163,7 @@
   <div id="topbar">
     <div>
       <div class="title">DaF Konuşma Asistanı</div>
-      <div class="subtitle">B2 · Aktuelle Themen · Groq</div>
+      <div class="subtitle">B2 · Aktuelle Themen</div>
     </div>
     <div id="conn-dot"></div>
   </div>
@@ -167,48 +174,58 @@
 
   <div id="controls">
     <div id="status-label">Hazırlanıyor…</div>
-    <button id="mic-btn" disabled onpointerdown="handleMic()">
-      <svg id="icon-mic" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+
+    <button id="mic-btn" disabled
+      onpointerdown="pressMic()"
+      onpointerup="releaseMic()"
+      onpointerleave="releaseMic()">
+      <svg id="icon-mic" xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
         <rect x="9" y="2" width="6" height="13" rx="3"/>
         <path d="M5 10a7 7 0 0 0 14 0"/>
         <line x1="12" y1="19" x2="12" y2="22"/>
         <line x1="8" y1="22" x2="16" y2="22"/>
       </svg>
-      <svg id="icon-stop" style="display:none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-        <rect x="4" y="4" width="16" height="16" rx="2"/>
-      </svg>
-      <svg id="icon-wave" style="display:none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24">
+      <svg id="icon-wave" style="display:none" xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24">
         <path d="M11 5L6 9H2v6h4l5 4V5z"/>
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
       </svg>
-      <span id="icon-spin" class="spin" style="display:none; font-size:22px; line-height:1;">⟳</span>
+      <span id="icon-spin" class="spin" style="display:none; font-size:24px; line-height:1;">⟳</span>
     </button>
-    <div class="hint">Almanca konuş · Asistan dinler ve yanıtlar</div>
+
+    <div class="hint" id="hint-text">
+      Basılı tut → konuş → bırak
+    </div>
   </div>
 </div>
 
 <script>
-const SYSTEM = `Du bist ein engagierter DaF-Gespraechstutor auf Niveau B2. Du fuehrst natuerliche kurze Gespraeche ueber aktuelle gesellschaftliche Themen.
+const SYSTEM = `Du bist ein freundlicher DaF-Sprachtutor fuer Niveau B2. Du machst kurze Gespraeche ueber aktuelle Themen.
 
-Themen: Klimawandel, Kuenstliche Intelligenz, Digitalisierung, Migration, Bildungssystem, soziale Medien.
+SPRACHNIVEAU — strikt B2:
+- Nur haeufige B2-Woerter verwenden, keine seltenen oder akademischen Ausdruecke
+- Kurze klare Saetze, maximal 15 Woerter pro Satz
+- Maximal 2 Saetze pro Antwort
+- Typische B2-Strukturen sind erlaubt: einfacher Konjunktiv II (koennte waere wuerde), Passiv, weil-Saetze, obwohl-Saetze
 
-Gespraechsstil:
-- Stelle offene kritische Fragen die zum Nachdenken anregen
-- Reagiere auf den Inhalt und baue auf vorherigen Aussagen auf
-- Maximal 2 bis 3 kurze Saetze pro Antwort
-- Verwende B2-Strukturen: Konjunktiv II, Passiv, Konzessivkonstruktionen
+THEMEN: Klimawandel, Kuenstliche Intelligenz, Digitalisierung, Migration, Schule und Bildung, soziale Medien
 
-Fehlerkorrektur nach der Karma-Methode:
-- Kleine Fehler bei Artikeln oder leichter Grammatik: Stiller Recast, korrekte Form still in die Antwort einbauen ohne Kommentar
-- Grosse Fehler bei Satzbau, Zeitform oder Verbkonjugation: Kurze muendliche Korrektur dann direkt weiter. Zum Beispiel: Kurzer Hinweis, hier sagt man bin gegangen nicht habe gegangen. Dann weiter.
+GESPRAECHSSTIL:
+- Immer eine einfache offene Frage stellen
+- Auf das Gesagte direkt eingehen
+- Natuerlich und warm sprechen
 
-Absolut wichtig: Nur Deutsch. Keine Emojis. Keine Sonderzeichen. Ermutigend und geduldig.`;
+FEHLERKORREKTUR:
+- Kleine Fehler (Artikel, Praeposition): Recast — korrekte Form still einbauen, kein Kommentar
+- Grosse Fehler (Zeitform, Satzbau, Verbform): Kurz sagen dann weitermachen. Beispiel: Hier sagen wir bin gegangen. Dann weiter.
+
+ABSOLUT WICHTIG: Nur Deutsch. Keine Emojis. Keine Sonderzeichen. Keine Aufzaehlungszeichen.`;
 
 let API_KEY = '';
 let history = [];
 let status = 'idle';
 let recognition = null;
+let collectedText = '';
 const synth = window.speechSynthesis;
 
 function startChat() {
@@ -217,8 +234,7 @@ function startChat() {
   API_KEY = key;
   document.getElementById('setup').style.display = 'none';
   document.getElementById('chat').style.display = 'flex';
-  synth.getVoices();
-  synth.onvoiceschanged = () => synth.getVoices();
+  loadVoices();
   initGreeting();
 }
 document.getElementById('api-key-input').addEventListener('keydown', e => { if (e.key === 'Enter') startChat(); });
@@ -227,27 +243,63 @@ function showSetupError(msg) {
   el.textContent = msg; el.style.display = 'block';
 }
 
+// ── VOICES ──
+let germanVoice = null;
+function loadVoices() {
+  const pick = () => {
+    const voices = synth.getVoices();
+    // Prefer neural/natural voices
+    germanVoice =
+      voices.find(v => v.lang === 'de-DE' && /natural|neural|premium|enhanced/i.test(v.name)) ||
+      voices.find(v => v.lang === 'de-DE' && !v.name.includes('Google')) ||
+      voices.find(v => v.lang === 'de-DE') ||
+      voices.find(v => v.lang.startsWith('de')) || null;
+  };
+  pick();
+  synth.onvoiceschanged = pick;
+}
+
+// ── STATUS ──
 function setStatus(s) {
   status = s;
   const btn = document.getElementById('mic-btn');
   const label = document.getElementById('status-label');
+  const hint = document.getElementById('hint-text');
   const labels = {
-    idle: 'Konuşmak için basa bas',
-    listening: 'Dinliyorum — durdurmak için basa bas',
-    thinking: 'Düşünüyor…',
-    speaking: 'Konuşuyor — durdurmak için basa bas'
+    idle:      'Basılı tut ve konuş',
+    listening: 'Dinliyorum…',
+    thinking:  'Düşünüyor…',
+    speaking:  'Konuşuyor — dokunarak durdur'
   };
   const colors = { idle:'#94a3b8', listening:'#4ade80', thinking:'#fbbf24', speaking:'#60a5fa' };
+  const hints = {
+    idle:      'Basılı tut → konuş → bırak',
+    listening: 'Konuşmayı bitirince parmağını kaldır',
+    thinking:  '',
+    speaking:  'Devam etmek için konuşmasını bekle'
+  };
   label.textContent = labels[s] || '';
   label.style.color = colors[s] || '#94a3b8';
-  ['mic','stop','wave','spin'].forEach(id => document.getElementById('icon-'+id).style.display = 'none');
+  hint.textContent = hints[s] || '';
+
+  ['mic','wave','spin'].forEach(id => document.getElementById('icon-'+id).style.display = 'none');
   btn.className = ''; btn.disabled = false;
-  if      (s === 'idle')      { document.getElementById('icon-mic').style.display = ''; }
-  else if (s === 'listening') { document.getElementById('icon-stop').style.display = ''; btn.classList.add('listening'); }
-  else if (s === 'thinking')  { document.getElementById('icon-spin').style.display = ''; btn.classList.add('thinking'); btn.disabled = true; }
-  else if (s === 'speaking')  { document.getElementById('icon-wave').style.display = ''; btn.classList.add('speaking'); }
+
+  if (s === 'idle') {
+    document.getElementById('icon-mic').style.display = '';
+  } else if (s === 'listening') {
+    document.getElementById('icon-mic').style.display = '';
+    btn.classList.add('listening');
+  } else if (s === 'thinking') {
+    document.getElementById('icon-spin').style.display = '';
+    btn.classList.add('thinking'); btn.disabled = true;
+  } else if (s === 'speaking') {
+    document.getElementById('icon-wave').style.display = '';
+    btn.classList.add('speaking');
+  }
 }
 
+// ── MESSAGES ──
 function addMessage(role, text) {
   const div = document.createElement('div');
   div.className = 'bubble ' + role; div.textContent = text;
@@ -268,6 +320,7 @@ function showError(msg) {
   document.getElementById('messages').scrollTop = 999999;
 }
 
+// ── API ──
 async function callGroq(userText) {
   history.push({ role: 'user', content: userText });
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -276,8 +329,8 @@ async function callGroq(userText) {
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'system', content: SYSTEM }, ...history],
-      max_tokens: 300,
-      temperature: 0.75
+      max_tokens: 120,
+      temperature: 0.7
     })
   });
   const data = await res.json();
@@ -287,78 +340,104 @@ async function callGroq(userText) {
   return text;
 }
 
+// ── TTS ──
 function cleanForSpeech(text) {
   return text
     .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
     .replace(/[\u2600-\u27BF]/gu, '')
-    .replace(/[*#\-–→←]/g, ' ')
+    .replace(/[*#\-–→←•]/g, ' ')
     .replace(/\s{2,}/g, ' ').trim();
-}
-function getGermanVoice() {
-  const v = synth.getVoices();
-  return v.find(x => x.lang === 'de-DE') || v.find(x => x.lang.startsWith('de')) || null;
 }
 function speak(text, onEnd) {
   synth.cancel();
   const utt = new SpeechSynthesisUtterance(cleanForSpeech(text));
-  utt.lang = 'de-DE'; utt.rate = 0.88;
-  const v = getGermanVoice(); if (v) utt.voice = v;
+  utt.lang = 'de-DE';
+  utt.rate = 0.82;
+  utt.pitch = 1.05;
+  if (germanVoice) utt.voice = germanVoice;
   utt.onend = () => onEnd && onEnd();
   utt.onerror = () => onEnd && onEnd();
   synth.speak(utt);
 }
 
+// ── INIT ──
 function initGreeting() {
   setStatus('thinking');
-  callGroq('Begruesse mich kurz auf Deutsch und stelle direkt eine offene Frage zu einem aktuellen Thema. Kein Emoji, keine Sonderzeichen.')
+  callGroq('Begruesse mich kurz auf Deutsch und stelle eine einfache offene Frage zu einem aktuellen Thema. Maximal 2 kurze Saetze. Kein Emoji.')
     .then(text => {
       document.getElementById('conn-dot').style.background = '#4ade80';
-      addMessage('assistant', text); setStatus('speaking');
+      addMessage('assistant', text);
+      setStatus('speaking');
       speak(text, () => setStatus('idle'));
     })
     .catch(err => {
       document.getElementById('conn-dot').style.background = '#ef4444';
-      showError('API hatası: ' + err.message); setStatus('idle');
+      showError('API hatası: ' + err.message);
+      setStatus('idle');
     });
 }
 
-function handleMic() {
+// ── PUSH TO TALK ──
+function pressMic() {
   if (status === 'thinking') return;
   if (status === 'speaking') { synth.cancel(); setStatus('idle'); return; }
-  if (status === 'listening') { stopRec(); return; }
-  if (status === 'idle') startRec();
-}
-function startRec() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showError('Bu tarayıcı ses tanımayı desteklemiyor. Chrome kullan.'); return; }
+  if (status !== 'idle') return;
+
   showError('');
+  collectedText = '';
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showError('Chrome tarayıcısı gerekli.'); return; }
+
   const rec = new SR();
-  rec.lang = 'de-DE'; rec.continuous = false; rec.interimResults = true;
-  recognition = rec; let done = false;
-  rec.onstart = () => { setStatus('listening'); setLive(''); };
+  rec.lang = 'de-DE';
+  rec.continuous = true;
+  rec.interimResults = true;
+  recognition = rec;
+
+  rec.onstart = () => setStatus('listening');
+
   rec.onresult = e => {
-    const all = Array.from(e.results).map(r => r[0].transcript).join(' ');
-    setLive(all);
-    const finals = Array.from(e.results).filter(r => r.isFinal);
-    if (finals.length && !done) {
-      done = true;
-      const text = finals.map(r => r[0].transcript).join(' ');
-      rec.stop(); setLive(''); addMessage('user', text); setStatus('thinking');
-      callGroq(text)
-        .then(reply => { addMessage('assistant', reply); setStatus('speaking'); speak(reply, () => setStatus('idle')); })
-        .catch(err => { showError('Yanıt alınamadı: ' + err.message); setStatus('idle'); });
+    let interim = '';
+    let finals = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finals += e.results[i][0].transcript + ' ';
+      else interim += e.results[i][0].transcript;
     }
+    if (finals) collectedText += finals;
+    setLive((collectedText + interim).trim());
   };
+
   rec.onerror = e => {
-    if (e.error === 'not-allowed') showError('Mikrofon izni verilmedi. Tarayıcı ayarlarından izin ver.');
-    else if (e.error === 'no-speech') showError('Ses algılanamadı. Tekrar dene.');
-    else showError('Ses hatası: ' + e.error);
+    if (e.error === 'not-allowed') showError('Mikrofon izni verilmedi.');
     setLive(''); setStatus('idle');
   };
-  rec.onend = () => { if (status === 'listening') setStatus('idle'); };
+
   try { rec.start(); } catch { showError('Mikrofon başlatılamadı.'); }
 }
-function stopRec() { recognition?.stop(); setLive(''); setStatus('idle'); }
+
+function releaseMic() {
+  if (status !== 'listening') return;
+  if (recognition) { recognition.stop(); recognition = null; }
+
+  const text = collectedText.trim();
+  setLive('');
+
+  if (!text) { setStatus('idle'); return; }
+
+  addMessage('user', text);
+  setStatus('thinking');
+
+  callGroq(text)
+    .then(reply => {
+      addMessage('assistant', reply);
+      setStatus('speaking');
+      speak(reply, () => setStatus('idle'));
+    })
+    .catch(err => {
+      showError('Yanıt alınamadı: ' + err.message);
+      setStatus('idle');
+    });
+}
 </script>
 </body>
 </html>
