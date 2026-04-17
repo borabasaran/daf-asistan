@@ -382,15 +382,26 @@ function speak(text, onEnd) {
   utt.pitch = 1.0;
   if (deVoice) utt.voice = deVoice;
 
-  // Yedek: onend bazı mobil tarayıcılarda tetiklenmeyebilir
-  // Tahmini süre: karakter başına ~80ms / rate
-  const estMs = Math.max(3000, (cleaned.length * 80) / 0.74) + 1500;
   let done = false;
-  const fallback = setTimeout(() => { if (!done) { done = true; clearWatchdog(); onEnd && onEnd(); } }, estMs);
+  function finish() {
+    if (done) return;
+    done = true;
+    clearWatchdog();
+    onEnd && onEnd();
+  }
 
-  utt.onend  = () => { if (!done) { done = true; clearTimeout(fallback); clearWatchdog(); onEnd && onEnd(); } };
-  utt.onerror = () => { if (!done) { done = true; clearTimeout(fallback); clearWatchdog(); onEnd && onEnd(); } };
+  utt.onend   = finish;
+  utt.onerror = finish;
   synth.speak(utt);
+
+  // Polling yedek: her 600ms'de synth.speaking kontrol et
+  // onend tetiklenmese bile çalışır
+  const poll = setInterval(() => {
+    if (!synth.speaking) { clearInterval(poll); finish(); }
+  }, 600);
+
+  // Maksimum 20sn — her koşulda idle'a döner
+  setTimeout(() => { clearInterval(poll); finish(); }, 20000);
 }
 
 // ── GREETING ──
