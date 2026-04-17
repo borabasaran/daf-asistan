@@ -375,13 +375,21 @@ function cleanTTS(t) {
 }
 function speak(text, onEnd) {
   synth.cancel();
-  const utt = new SpeechSynthesisUtterance(cleanTTS(text));
+  const cleaned = cleanTTS(text);
+  const utt = new SpeechSynthesisUtterance(cleaned);
   utt.lang = 'de-DE';
   utt.rate = 0.74;
   utt.pitch = 1.0;
   if (deVoice) utt.voice = deVoice;
-  utt.onend  = () => { clearWatchdog(); onEnd && onEnd(); };
-  utt.onerror = () => { clearWatchdog(); onEnd && onEnd(); };
+
+  // Yedek: onend bazı mobil tarayıcılarda tetiklenmeyebilir
+  // Tahmini süre: karakter başına ~80ms / rate
+  const estMs = Math.max(3000, (cleaned.length * 80) / 0.74) + 1500;
+  let done = false;
+  const fallback = setTimeout(() => { if (!done) { done = true; clearWatchdog(); onEnd && onEnd(); } }, estMs);
+
+  utt.onend  = () => { if (!done) { done = true; clearTimeout(fallback); clearWatchdog(); onEnd && onEnd(); } };
+  utt.onerror = () => { if (!done) { done = true; clearTimeout(fallback); clearWatchdog(); onEnd && onEnd(); } };
   synth.speak(utt);
 }
 
