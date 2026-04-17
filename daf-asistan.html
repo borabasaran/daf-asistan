@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>DaF Konuşma Asistanı · B2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: #0f172a;
+    color: #f1f5f9;
+    font-family: system-ui, -apple-system, sans-serif;
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── SETUP SCREEN ── */
+  #setup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 40px 28px;
+    text-align: center;
+    height: 100dvh;
+    overflow-y: auto;
+  }
+
+  .badge {
+    padding: 5px 16px;
+    background: rgba(251,191,36,0.1);
+    border: 1px solid rgba(251,191,36,0.3);
+    border-radius: 24px;
+    font-size: 11px;
+    color: #fbbf24;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-family: Georgia, serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: #f1f5f9;
+    line-height: 1.3;
+  }
+
+  .sub { font-size: 11px; color: #475569; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+
+  .field { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+  .field label { font-size: 12px; color: #64748b; }
+  .field input {
+    padding: 12px 14px;
+    background: #1e293b;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-size: 15px;
+    outline: none;
+    font-family: inherit;
+    width: 100%;
+  }
+  .field input:focus { border-color: rgba(251,191,36,0.5); }
+  .field p { font-size: 11.5px; color: #475569; line-height: 1.65; }
+  .field a { color: #60a5fa; }
+
+  .btn-primary {
+    padding: 14px 42px;
+    background: #fbbf24;
+    color: #0f172a;
+    border: none;
+    border-radius: 40px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    touch-action: manipulation;
+    user-select: none;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:active { opacity: 0.85; }
+  .btn-primary:disabled { background: #1e293b; color: #475569; cursor: default; }
+
+  .info-box {
+    background: #1e293b;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.7;
+    max-width: 340px;
+    text-align: left;
+  }
+
+  /* ── CHAT SCREEN ── */
+  #chat { display: none; flex-direction: column; height: 100dvh; }
+
+  #topbar {
+    padding: 12px 18px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #topbar .title { font-family: Georgia, serif; font-size: 15px; color: #fbbf24; }
+  #topbar .subtitle { font-size: 10px; color: #475569; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+  #conn-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #475569;
+    transition: background 0.4s;
+  }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+  }
+
+  .bubble {
+    max-width: 86%;
+    padding: 10px 14px;
+    font-size: 14.5px;
+    line-height: 1.65;
+    animation: fadeUp 0.2s ease;
+  }
+  .bubble.user {
+    align-self: flex-end;
+    background: #132318;
+    border: 1px solid rgba(74,222,128,0.2);
+    color: #bbf7d0;
+    border-radius: 14px 3px 14px 14px;
+  }
+  .bubble.assistant {
+    align-self: flex-start;
+    background: #1e293b;
+    border: 1px solid rgba(251,191,36,0.12);
+    color: #e2e8f0;
+    border-radius: 3px 14px 14px 14px;
+  }
+  .bubble.live {
+    align-self: flex-end;
+    background: rgba(19,35,24,0.5);
+    border: 1px dashed rgba(74,222,128,0.25);
+    color: rgba(187,247,208,0.45);
+    border-radius: 14px 3px 14px 14px;
+    font-style: italic;
+    font-size: 13px;
+  }
+
+  #error-bar {
+    display: none;
+    align-self: center;
+    padding: 7px 14px;
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: #fca5a5;
+    text-align: center;
+    max-width: 90%;
+  }
+
+  #controls {
+    padding: 12px 14px 28px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  #status-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: #94a3b8;
+    transition: color 0.3s;
+    text-align: center;
+    min-height: 14px;
+  }
+
+  #mic-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #1e293b;
+    border: 2px solid rgba(251,191,36,0.4);
+    color: #fbbf24;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    flex-shrink: 0;
+  }
+  #mic-btn:disabled { opacity: 0.35; cursor: default; }
+
+  #mic-btn.listening {
+    background: rgba(74,222,128,0.1);
+    border-color: #4ade80;
+    color: #4ade80;
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  #mic-btn.speaking {
+    background: rgba(96,165,250,0.1);
+    border-color: rgba(96,165,250,0.45);
+    color: #60a5fa;
+  }
+  #mic-btn.thinking {
+    border-color: rgba(100,116,139,0.3);
+    color: #64748b;
+  }
+
+  .hint { font-size: 11px; color: #334155; text-align: center; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.35); }
+    50%      { box-shadow: 0 0 0 12px rgba(74,222,128,0); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 1s linear infinite; display: inline-block; }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══ SETUP ═══ -->
+<div id="setup">
+  <div>
+    <h1>DaF Konuşma<br>Asistanı</h1>
+    <div class="sub">Sesli Pratik · Almanca</div>
+  </div>
+
+  <div class="badge">B2 · Aktuelle Themen · Karma-Korrektur</div>
+
+  <div class="field">
+    <label>Google AI Studio API Anahtarı</label>
+    <input type="password" id="api-key-input" placeholder="AIza..." autocomplete="off" />
+    <p>
+      <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>
+      adresinden ücretsiz alınabilir.<br>
+      Gemini 2.0 Flash modelinde geniş ücretsiz kota mevcut.
+    </p>
+  </div>
+
+  <div id="setup-error" style="display:none; color:#fca5a5; font-size:13px; max-width:340px;"></div>
+
+  <button class="btn-primary" id="start-btn" onclick="startChat()">Başla</button>
+
+  <div class="info-box">
+    Chrome veya Edge tarayıcısında çalışır.<br>
+    Mikrofon izni gereklidir.<br>
+    Asistan Almanca konuşur ve hataları düzeltir.
+  </div>
+</div>
+
+<!-- ═══ CHAT ═══ -->
+<div id="chat">
+  <div id="topbar">
+    <div>
+      <div class="title">DaF Konuşma Asistanı</div>
+      <div class="subtitle">B2 · Aktuelle Themen</div>
+    </div>
+    <div id="conn-dot"></div>
+  </div>
+
+  <div id="messages">
+    <div id="error-bar"></div>
+  </div>
+
+  <div id="controls">
+    <div id="status-label">Hazırlanıyor…</div>
+    <button id="mic-btn" disabled onpointerdown="handleMic()">
+      <svg id="icon-mic" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>
+      </svg>
+      <svg id="icon-stop" style="display:none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="16" height="16" rx="2"/>
+      </svg>
+      <svg id="icon-wave" style="display:none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      </svg>
+      <span id="icon-spin" class="spin" style="display:none; font-size:20px;">⟳</span>
+    </button>
+    <div class="hint">Almanca konuş · Gemini dinler ve yanıtlar</div>
+  </div>
+</div>
+
+<script>
+const SYSTEM = `Du bist ein engagierter DaF-Gespraechstutor auf Niveau B2. Du fuehrst natuerliche kurze Gespraeche ueber aktuelle gesellschaftliche Themen.
+
+Themen: Klimawandel, Kuenstliche Intelligenz, Digitalisierung, Migration, Bildungssystem, soziale Medien.
+
+Gespraechsstil:
+- Stelle offene kritische Fragen die zum Nachdenken anregen
+- Reagiere auf den Inhalt und baue auf vorherigen Aussagen auf
+- Maximal 2 bis 3 kurze Saetze pro Antwort fuer echten Dialogfluss
+- Verwende typische B2-Strukturen: Konjunktiv II, Passiv, Konzessivkonstruktionen
+
+Fehlerkorrektur nach der Karma-Methode:
+- Kleine Fehler bei Artikeln oder leichter Grammatik: Stiller Recast, korrekte Form still in die Antwort einbauen ohne Kommentar
+- Grosse Fehler bei Satzbau, Zeitform oder Verbkonjugation: Kurze muendliche Korrektur dann direkt weiter. Zum Beispiel: Kurzer Hinweis, hier sagt man bin gegangen nicht habe gegangen. Dann weiter im Gespraech.
+
+Absolut wichtig: Nur Deutsch. Keine Emojis. Keine Sonderzeichen. Keine Aufzaehlungszeichen. Ermutigend und geduldig.`;
+
+let API_KEY = '';
+let history = [];
+let status = 'idle';
+let recognition = null;
+let synth = window.speechSynthesis;
+
+// ── SETUP ──
+function startChat() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) { showSetupError('API anahtarı gerekli.'); return; }
+  API_KEY = key;
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('chat').style.display = 'flex';
+  document.getElementById('conn-dot').style.background = '#fbbf24';
+  initGreeting();
+}
+
+document.getElementById('api-key-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startChat();
+});
+
+function showSetupError(msg) {
+  const el = document.getElementById('setup-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ── STATUS ──
+function setStatus(s) {
+  status = s;
+  const btn = document.getElementById('mic-btn');
+  const label = document.getElementById('status-label');
+  const labels = {
+    idle:     'Konuşmak için basa bas',
+    listening:'Dinliyorum — durdurmak için basa bas',
+    thinking: 'Düşünüyor…',
+    speaking: 'Konuşuyor — durdurmak için basa bas',
+  };
+  const colors = {
+    idle:'#94a3b8', listening:'#4ade80', thinking:'#fbbf24', speaking:'#60a5fa'
+  };
+  label.textContent = labels[s] || '';
+  label.style.color = colors[s] || '#94a3b8';
+
+  ['mic','stop','wave','spin'].forEach(id =>
+    document.getElementById('icon-'+id).style.display = 'none'
+  );
+  btn.className = '';
+  btn.disabled = false;
+
+  if (s === 'idle') {
+    document.getElementById('icon-mic').style.display = '';
+  } else if (s === 'listening') {
+    document.getElementById('icon-stop').style.display = '';
+    btn.classList.add('listening');
+  } else if (s === 'thinking') {
+    document.getElementById('icon-spin').style.display = '';
+    btn.classList.add('thinking');
+    btn.disabled = true;
+  } else if (s === 'speaking') {
+    document.getElementById('icon-wave').style.display = '';
+    btn.classList.add('speaking');
+  }
+}
+
+// ── MESSAGES ──
+function addMessage(role, text) {
+  const div = document.createElement('div');
+  div.className = 'bubble ' + role;
+  div.textContent = text;
+  const msgs = document.getElementById('messages');
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+let liveBubble = null;
+function setLive(text) {
+  const msgs = document.getElementById('messages');
+  if (!text) { if (liveBubble) { liveBubble.remove(); liveBubble = null; } return; }
+  if (!liveBubble) { liveBubble = document.createElement('div'); liveBubble.className = 'bubble live'; msgs.appendChild(liveBubble); }
+  liveBubble.textContent = text;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-bar');
+  if (!msg) { el.style.display = 'none'; return; }
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('messages').scrollTop = 999999;
+}
+
+// ── GEMINI API ──
+async function callGemini(userText) {
+  history.push({ role: 'user', parts: [{ text: userText }] });
+
+  const body = {
+    system_instruction: { parts: [{ text: SYSTEM }] },
+    contents: history,
+    generationConfig: { temperature: 0.75, maxOutputTokens: 300 }
+  };
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  );
+
+  const data = await res.json();
+
+  if (data.error) throw new Error(data.error.message);
+
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  history.push({ role: 'model', parts: [{ text }] });
+  return text;
+}
+
+// ── TTS ──
+function cleanForSpeech(text) {
+  return text
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
+    .replace(/[\u2600-\u27BF]/gu, '')
+    .replace(/[*#\-–→←]/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function getGermanVoice() {
+  const voices = synth.getVoices();
+  return voices.find(v => v.lang === 'de-DE') ||
+         voices.find(v => v.lang.startsWith('de')) || null;
+}
+
+function speak(text, onEnd) {
+  synth.cancel();
+  const utt = new SpeechSynthesisUtterance(cleanForSpeech(text));
+  utt.lang = 'de-DE';
+  utt.rate = 0.88;
+  const voice = getGermanVoice();
+  if (voice) utt.voice = voice;
+  utt.onend = () => onEnd && onEnd();
+  utt.onerror = () => onEnd && onEnd();
+  synth.speak(utt);
+}
+
+// ── INIT ──
+function initGreeting() {
+  synth.getVoices();
+  synth.onvoiceschanged = () => synth.getVoices();
+
+  setStatus('thinking');
+
+  callGemini('Begruesse mich kurz auf Deutsch und stelle direkt eine offene Frage zu einem aktuellen Thema. Kein Emoji, keine Sonderzeichen.')
+    .then(text => {
+      document.getElementById('conn-dot').style.background = '#4ade80';
+      addMessage('assistant', text);
+      setStatus('speaking');
+      speak(text, () => setStatus('idle'));
+    })
+    .catch(err => {
+      document.getElementById('conn-dot').style.background = '#ef4444';
+      showError('API hatası: ' + err.message + ' — API anahtarını kontrol et.');
+      setStatus('idle');
+    });
+}
+
+// ── MIC ──
+function handleMic() {
+  if (status === 'thinking') return;
+  if (status === 'speaking') { synth.cancel(); setStatus('idle'); return; }
+  if (status === 'listening') { stopRec(); return; }
+  if (status === 'idle') startRec();
+}
+
+function startRec() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showError('Bu tarayıcı ses tanımayı desteklemiyor. Chrome kullan.'); return; }
+
+  showError('');
+  const rec = new SR();
+  rec.lang = 'de-DE';
+  rec.continuous = false;
+  rec.interimResults = true;
+  recognition = rec;
+  let done = false;
+
+  rec.onstart = () => { setStatus('listening'); setLive(''); };
+
+  rec.onresult = e => {
+    const all = Array.from(e.results).map(r => r[0].transcript).join(' ');
+    setLive(all);
+    const finals = Array.from(e.results).filter(r => r.isFinal);
+    if (finals.length && !done) {
+      done = true;
+      const text = finals.map(r => r[0].transcript).join(' ');
+      rec.stop();
+      setLive('');
+      addMessage('user', text);
+      setStatus('thinking');
+
+      callGemini(text)
+        .then(reply => {
+          addMessage('assistant', reply);
+          setStatus('speaking');
+          speak(reply, () => setStatus('idle'));
+        })
+        .catch(err => {
+          showError('Yanıt alınamadı: ' + err.message);
+          setStatus('idle');
+        });
+    }
+  };
+
+  rec.onerror = e => {
+    if (e.error === 'not-allowed') showError('Mikrofon izni verilmedi. Tarayıcı ayarlarından izin ver.');
+    else if (e.error === 'no-speech') showError('Ses algılanamadı. Tekrar dene.');
+    else showError('Ses hatası: ' + e.error);
+    setLive('');
+    setStatus('idle');
+  };
+
+  rec.onend = () => { if (status === 'listening') setStatus('idle'); };
+
+  try { rec.start(); } catch { showError('Mikrofon başlatılamadı.'); }
+}
+
+function stopRec() {
+  recognition?.stop();
+  setLive('');
+  setStatus('idle');
+}
+</script>
+</body>
+</html>
