@@ -467,42 +467,12 @@ function greet() {
 }
 
 // ── PUSH TO TALK ──
-function pressMic() {
-  if (appStatus === 'thinking') return;
-  if (appStatus === 'speaking') { synth.cancel(); clearWatchdog(); setStatus('idle'); return; }
-  if (appStatus !== 'idle') return;
-  showErr('');
-  collected = '';
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showErr('Chrome gerekli.'); return; }
-  const r = new SR();
-  r.lang = 'de-DE'; r.continuous = true; r.interimResults = true;
-  rec = r;
-  r.onstart = () => setStatus('listening');
-  r.onresult = e => {
-    let interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) collected += e.results[i][0].transcript + ' ';
-      else interim += e.results[i][0].transcript;
-    }
-    setLive((collected + interim).trim());
-  };
-  r.onerror = e => {
-    if (e.error === 'not-allowed') showErr('Mikrofon izni verilmedi.');
-    setLive(''); if (appStatus === 'listening') setStatus('idle');
-  };
-  r.onend = () => { if (appStatus === 'listening') setStatus('idle'); };
-  try { r.start(); } catch { showErr('Mikrofon başlatılamadı.'); }
-}
+let releasing = false;
 
-function releaseMic() {
-  if (appStatus !== 'listening') return;
-  if (rec) { try { rec.stop(); } catch(e){} rec = null; }
-  const text = (collected || lastInterim).trim();
-  lastInterim = '';
+function processText(text) {
   setLive('');
   if (!text) {
-    showErr('Ses anlaşılamadı — yavaşça ve net konuş, ya da aşağıdan yaz.');
+    showErr('Ses anlaşılamadı — tekrar dene ya da aşağıdan yaz.');
     setStatus('idle');
     return;
   }
@@ -521,6 +491,62 @@ function releaseMic() {
       showErr('Yanıt alınamadı: ' + err.message);
       setStatus('idle');
     });
+}
+
+function pressMic() {
+  if (appStatus === 'thinking') return;
+  if (appStatus === 'speaking') { synth.cancel(); clearWatchdog(); setStatus('idle'); return; }
+  if (appStatus !== 'idle') return;
+  showErr('');
+  collected = '';
+  lastInterim = '';
+  releasing = false;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showErr('Chrome gerekli.'); return; }
+  const r = new SR();
+  r.lang = 'de-DE'; r.continuous = true; r.interimResults = true;
+  rec = r;
+
+  r.onstart = () => setStatus('listening');
+
+  r.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) collected += e.results[i][0].transcript + ' ';
+      else interim += e.results[i][0].transcript;
+    }
+    if (interim) lastInterim = interim;
+    setLive((collected + interim).trim());
+  };
+
+  r.onerror = e => {
+    releasing = false;
+    if (e.error === 'not-allowed') showErr('Mikrofon izni verilmedi.');
+    setLive('');
+    if (appStatus === 'listening') setStatus('idle');
+  };
+
+  // onend her zaman son onresult'tan SONRA gelir
+  // Metni burada okuyoruz — race condition yok
+  r.onend = () => {
+    rec = null;
+    if (releasing) {
+      releasing = false;
+      processText((collected || lastInterim).trim());
+      lastInterim = '';
+    } else {
+      if (appStatus === 'listening') setStatus('idle');
+    }
+  };
+
+  try { r.start(); } catch { showErr('Mikrofon başlatılamadı.'); }
+}
+
+function releaseMic() {
+  if (appStatus !== 'listening') return;
+  releasing = true;
+  if (rec) { try { rec.stop(); } catch(e){} }
+  // İşlem onend'e devredildi — o geldiğinde her final sonuç hazır olur
 }
 
 // ── TEXT INPUT ──
