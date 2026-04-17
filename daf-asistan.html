@@ -11,7 +11,6 @@
     font-family: system-ui, -apple-system, sans-serif;
     height: 100dvh; overflow: hidden; display: flex; flex-direction: column;
   }
-
   #setup {
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 20px;
@@ -68,7 +67,7 @@
     flex: 1; overflow-y: auto; padding: 14px 12px;
     display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth;
   }
-  .bubble { max-width: 86%; padding: 10px 14px; font-size: 14.5px; line-height: 1.65; animation: fadeUp 0.2s ease; }
+  .bubble { max-width: 88%; padding: 10px 14px; font-size: 14.5px; line-height: 1.7; animation: fadeUp 0.2s ease; }
   .bubble.user {
     align-self: flex-end; background: #132318;
     border: 1px solid rgba(74,222,128,0.2); color: #bbf7d0;
@@ -78,6 +77,12 @@
     align-self: flex-start; background: #1e293b;
     border: 1px solid rgba(251,191,36,0.12); color: #e2e8f0;
     border-radius: 3px 14px 14px 14px;
+  }
+  .bubble.correction {
+    align-self: flex-start; background: #1a1a2e;
+    border: 1px solid rgba(251,191,36,0.35); color: #fde68a;
+    border-radius: 3px 14px 14px 14px;
+    font-size: 13.5px;
   }
   .bubble.live {
     align-self: flex-end; background: rgba(19,35,24,0.5);
@@ -98,8 +103,6 @@
     font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
     font-weight: 500; color: #94a3b8; transition: color 0.3s; text-align: center; min-height: 14px;
   }
-
-  /* Push-to-talk button */
   #mic-btn {
     width: 80px; height: 80px; border-radius: 50%;
     background: #1e293b; border: 2px solid rgba(251,191,36,0.4); color: #fbbf24;
@@ -111,16 +114,11 @@
   #mic-btn:disabled { opacity: 0.35; cursor: default; }
   #mic-btn.listening {
     background: rgba(74,222,128,0.15); border-color: #4ade80; color: #4ade80;
-    transform: scale(1.08);
-    animation: pulse 1.5s ease-in-out infinite;
+    transform: scale(1.08); animation: pulse 1.5s ease-in-out infinite;
   }
   #mic-btn.speaking  { background: rgba(96,165,250,0.1); border-color: rgba(96,165,250,0.45); color: #60a5fa; }
   #mic-btn.thinking  { border-color: rgba(100,116,139,0.3); color: #64748b; }
-
-  .hint {
-    font-size: 11px; color: #334155; text-align: center; line-height: 1.5;
-    max-width: 260px;
-  }
+  .hint { font-size: 11px; color: #334155; text-align: center; line-height: 1.5; max-width: 260px; }
 
   @keyframes fadeUp { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
   @keyframes pulse  { 0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.4); } 50% { box-shadow: 0 0 0 14px rgba(74,222,128,0); } }
@@ -139,7 +137,6 @@
     <div class="sub">Sesli Pratik · Almanca</div>
   </div>
   <div class="badge">B2 · Aktuelle Themen · Karma-Korrektur</div>
-
   <div class="steps">
     <p>Groq API anahtarı <span class="free-tag">ÜCRETSİZ</span></p>
     <ol>
@@ -147,13 +144,11 @@
       <li>API Keys → Create API Key → kopyala</li>
     </ol>
   </div>
-
   <div class="field">
     <label>Groq API Anahtarı</label>
     <input type="password" id="api-key-input" placeholder="gsk_..." autocomplete="off" />
     <p>Kredi kartı gerekmez. Günde 14.000 ücretsiz istek.</p>
   </div>
-
   <div id="setup-error" style="display:none; color:#fca5a5; font-size:13px; max-width:340px;"></div>
   <button class="btn-primary" onclick="startChat()">Başla</button>
 </div>
@@ -167,14 +162,9 @@
     </div>
     <div id="conn-dot"></div>
   </div>
-
-  <div id="messages">
-    <div id="error-bar"></div>
-  </div>
-
+  <div id="messages"><div id="error-bar"></div></div>
   <div id="controls">
     <div id="status-label">Hazırlanıyor…</div>
-
     <button id="mic-btn" disabled
       onpointerdown="pressMic()"
       onpointerup="releaseMic()"
@@ -192,34 +182,39 @@
       </svg>
       <span id="icon-spin" class="spin" style="display:none; font-size:24px; line-height:1;">⟳</span>
     </button>
-
-    <div class="hint" id="hint-text">
-      Basılı tut → konuş → bırak
-    </div>
+    <div class="hint" id="hint-text">Basılı tut → konuş → bırak</div>
   </div>
 </div>
 
 <script>
-const SYSTEM = `Du bist ein freundlicher DaF-Sprachtutor fuer Niveau B2. Du machst kurze Gespraeche ueber aktuelle Themen.
+const SYSTEM = `Du bist ein geduldiger DaF-Sprachtutor. Deine Lernenden sind auf Niveau B2.
 
-SPRACHNIVEAU — strikt B2:
-- Nur haeufige B2-Woerter verwenden, keine seltenen oder akademischen Ausdruecke
-- Kurze klare Saetze, maximal 15 Woerter pro Satz
-- Maximal 2 Saetze pro Antwort
-- Typische B2-Strukturen sind erlaubt: einfacher Konjunktiv II (koennte waere wuerde), Passiv, weil-Saetze, obwohl-Saetze
+SPRACHE strikt einhalten:
+Maximal 8 Woerter pro Satz. Maximal 2 Saetze pro Antwort. Nur allgemeine B2-Woerter. Langsam und klar formulieren.
 
-THEMEN: Klimawandel, Kuenstliche Intelligenz, Digitalisierung, Migration, Schule und Bildung, soziale Medien
+THEMEN: Klimawandel, Kuenstliche Intelligenz, Alltag und Technik, Schule, soziale Medien.
 
-GESPRAECHSSTIL:
-- Immer eine einfache offene Frage stellen
-- Auf das Gesagte direkt eingehen
-- Natuerlich und warm sprechen
+GESPRAECH: Jede Antwort mit einer kurzen einfachen Frage beenden. Direkt auf das Gesagte eingehen.
 
-FEHLERKORREKTUR:
-- Kleine Fehler (Artikel, Praeposition): Recast — korrekte Form still einbauen, kein Kommentar
-- Grosse Fehler (Zeitform, Satzbau, Verbform): Kurz sagen dann weitermachen. Beispiel: Hier sagen wir bin gegangen. Dann weiter.
+FEHLERKORREKTUR ist sehr wichtig. Nutze immer dieses feste Format wenn ein Fehler vorkommt:
 
-ABSOLUT WICHTIG: Nur Deutsch. Keine Emojis. Keine Sonderzeichen. Keine Aufzaehlungszeichen.`;
+Grammatikfehler (Zeitform, Verbform, Satzbau):
+Schreibe zuerst: KORREKTUR: [korrekte Form]. [Eine kurze Regel in einem Satz]. Dann stelle eine Frage weiter.
+
+Beispiel 1:
+Lernender: Ich habe gestern ins Kino gegangen.
+Tutor: KORREKTUR: Richtig heisst es ich bin gegangen. Bei Bewegungsverben nutzen wir sein. Und was hast du im Kino gesehen?
+
+Beispiel 2:
+Lernender: Das Wetter ist sehr schoen heute.
+Tutor: (kein Fehler, direkt antworten) Ja das stimmt. Gutes Wetter macht uns gluecklich. Bist du heute draussen gewesen?
+
+Aussprachehinweis wenn noetig:
+Schreibe: AUSSPRACHE: Das Wort [Wort] spricht man [Hinweis] aus. Dann weiter.
+
+Kleine Fehler wie falscher Artikel allein nicht korrigieren.
+
+WICHTIG: Nur Deutsch. Keine Emojis. Keine Sonderzeichen. Keine Bindestriche.`;
 
 let API_KEY = '';
 let history = [];
@@ -238,20 +233,15 @@ function startChat() {
   initGreeting();
 }
 document.getElementById('api-key-input').addEventListener('keydown', e => { if (e.key === 'Enter') startChat(); });
-function showSetupError(msg) {
-  const el = document.getElementById('setup-error');
-  el.textContent = msg; el.style.display = 'block';
-}
+function showSetupError(msg) { const el = document.getElementById('setup-error'); el.textContent = msg; el.style.display = 'block'; }
 
-// ── VOICES ──
+// VOICES
 let germanVoice = null;
 function loadVoices() {
   const pick = () => {
     const voices = synth.getVoices();
-    // Prefer neural/natural voices
     germanVoice =
       voices.find(v => v.lang === 'de-DE' && /natural|neural|premium|enhanced/i.test(v.name)) ||
-      voices.find(v => v.lang === 'de-DE' && !v.name.includes('Google')) ||
       voices.find(v => v.lang === 'de-DE') ||
       voices.find(v => v.lang.startsWith('de')) || null;
   };
@@ -259,50 +249,33 @@ function loadVoices() {
   synth.onvoiceschanged = pick;
 }
 
-// ── STATUS ──
+// STATUS
 function setStatus(s) {
   status = s;
   const btn = document.getElementById('mic-btn');
   const label = document.getElementById('status-label');
   const hint = document.getElementById('hint-text');
-  const labels = {
-    idle:      'Basılı tut ve konuş',
-    listening: 'Dinliyorum…',
-    thinking:  'Düşünüyor…',
-    speaking:  'Konuşuyor — dokunarak durdur'
-  };
-  const colors = { idle:'#94a3b8', listening:'#4ade80', thinking:'#fbbf24', speaking:'#60a5fa' };
-  const hints = {
-    idle:      'Basılı tut → konuş → bırak',
-    listening: 'Konuşmayı bitirince parmağını kaldır',
-    thinking:  '',
-    speaking:  'Devam etmek için konuşmasını bekle'
-  };
+  const labels   = { idle:'Basılı tut ve konuş', listening:'Dinliyorum…', thinking:'Düşünüyor…', speaking:'Konuşuyor — dokunarak durdur' };
+  const colors   = { idle:'#94a3b8', listening:'#4ade80', thinking:'#fbbf24', speaking:'#60a5fa' };
+  const hints    = { idle:'Basılı tut → konuş → bırak', listening:'Konuşmayı bitirince parmağını kaldır', thinking:'', speaking:'' };
   label.textContent = labels[s] || '';
   label.style.color = colors[s] || '#94a3b8';
-  hint.textContent = hints[s] || '';
-
+  hint.textContent = hints[s] !== undefined ? hints[s] : '';
   ['mic','wave','spin'].forEach(id => document.getElementById('icon-'+id).style.display = 'none');
   btn.className = ''; btn.disabled = false;
-
-  if (s === 'idle') {
-    document.getElementById('icon-mic').style.display = '';
-  } else if (s === 'listening') {
-    document.getElementById('icon-mic').style.display = '';
-    btn.classList.add('listening');
-  } else if (s === 'thinking') {
-    document.getElementById('icon-spin').style.display = '';
-    btn.classList.add('thinking'); btn.disabled = true;
-  } else if (s === 'speaking') {
-    document.getElementById('icon-wave').style.display = '';
-    btn.classList.add('speaking');
-  }
+  if      (s === 'idle')      { document.getElementById('icon-mic').style.display = ''; }
+  else if (s === 'listening') { document.getElementById('icon-mic').style.display = ''; btn.classList.add('listening'); }
+  else if (s === 'thinking')  { document.getElementById('icon-spin').style.display = ''; btn.classList.add('thinking'); btn.disabled = true; }
+  else if (s === 'speaking')  { document.getElementById('icon-wave').style.display = ''; btn.classList.add('speaking'); }
 }
 
-// ── MESSAGES ──
+// MESSAGES
 function addMessage(role, text) {
+  // Detect correction bubbles
+  const isCorrection = /^KORREKTUR:|^AUSSPRACHE:/i.test(text.trim());
   const div = document.createElement('div');
-  div.className = 'bubble ' + role; div.textContent = text;
+  div.className = 'bubble ' + (isCorrection ? 'correction' : role);
+  div.textContent = text;
   const msgs = document.getElementById('messages');
   msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
 }
@@ -320,7 +293,7 @@ function showError(msg) {
   document.getElementById('messages').scrollTop = 999999;
 }
 
-// ── API ──
+// API
 async function callGroq(userText) {
   history.push({ role: 'user', content: userText });
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -330,7 +303,7 @@ async function callGroq(userText) {
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'system', content: SYSTEM }, ...history],
       max_tokens: 120,
-      temperature: 0.7
+      temperature: 0.65
     })
   });
   const data = await res.json();
@@ -340,11 +313,13 @@ async function callGroq(userText) {
   return text;
 }
 
-// ── TTS ──
+// TTS
 function cleanForSpeech(text) {
   return text
     .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
     .replace(/[\u2600-\u27BF]/gu, '')
+    .replace(/KORREKTUR:/gi, 'Korrektur.')
+    .replace(/AUSSPRACHE:/gi, 'Aussprache-Hinweis.')
     .replace(/[*#\-–→←•]/g, ' ')
     .replace(/\s{2,}/g, ' ').trim();
 }
@@ -352,18 +327,18 @@ function speak(text, onEnd) {
   synth.cancel();
   const utt = new SpeechSynthesisUtterance(cleanForSpeech(text));
   utt.lang = 'de-DE';
-  utt.rate = 0.82;
-  utt.pitch = 1.05;
+  utt.rate = 0.75;
+  utt.pitch = 1.0;
   if (germanVoice) utt.voice = germanVoice;
   utt.onend = () => onEnd && onEnd();
   utt.onerror = () => onEnd && onEnd();
   synth.speak(utt);
 }
 
-// ── INIT ──
+// INIT
 function initGreeting() {
   setStatus('thinking');
-  callGroq('Begruesse mich kurz auf Deutsch und stelle eine einfache offene Frage zu einem aktuellen Thema. Maximal 2 kurze Saetze. Kein Emoji.')
+  callGroq('Begruesse mich kurz auf Deutsch. Stelle dann eine einfache Frage zu einem aktuellen Thema. Maximal 2 kurze Saetze. Kein Emoji.')
     .then(text => {
       document.getElementById('conn-dot').style.background = '#4ade80';
       addMessage('assistant', text);
@@ -377,28 +352,21 @@ function initGreeting() {
     });
 }
 
-// ── PUSH TO TALK ──
+// PUSH TO TALK
 function pressMic() {
   if (status === 'thinking') return;
   if (status === 'speaking') { synth.cancel(); setStatus('idle'); return; }
   if (status !== 'idle') return;
-
   showError('');
   collectedText = '';
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { showError('Chrome tarayıcısı gerekli.'); return; }
-
   const rec = new SR();
-  rec.lang = 'de-DE';
-  rec.continuous = true;
-  rec.interimResults = true;
+  rec.lang = 'de-DE'; rec.continuous = true; rec.interimResults = true;
   recognition = rec;
-
   rec.onstart = () => setStatus('listening');
-
   rec.onresult = e => {
-    let interim = '';
-    let finals = '';
+    let interim = '', finals = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       if (e.results[i].isFinal) finals += e.results[i][0].transcript + ' ';
       else interim += e.results[i][0].transcript;
@@ -406,37 +374,28 @@ function pressMic() {
     if (finals) collectedText += finals;
     setLive((collectedText + interim).trim());
   };
-
   rec.onerror = e => {
     if (e.error === 'not-allowed') showError('Mikrofon izni verilmedi.');
     setLive(''); setStatus('idle');
   };
-
   try { rec.start(); } catch { showError('Mikrofon başlatılamadı.'); }
 }
 
 function releaseMic() {
   if (status !== 'listening') return;
   if (recognition) { recognition.stop(); recognition = null; }
-
   const text = collectedText.trim();
   setLive('');
-
   if (!text) { setStatus('idle'); return; }
-
   addMessage('user', text);
   setStatus('thinking');
-
   callGroq(text)
     .then(reply => {
       addMessage('assistant', reply);
       setStatus('speaking');
       speak(reply, () => setStatus('idle'));
     })
-    .catch(err => {
-      showError('Yanıt alınamadı: ' + err.message);
-      setStatus('idle');
-    });
+    .catch(err => { showError('Yanıt alınamadı: ' + err.message); setStatus('idle'); });
 }
 </script>
 </body>
