@@ -348,7 +348,7 @@ async function callGroq(text) {
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'system', content: SYSTEM }, ...history],
-      max_tokens: 100,
+      max_tokens: 160,
       temperature: 0.6
     })
   });
@@ -386,6 +386,8 @@ function speak(text, onEnd) {
   function finish() {
     if (done) return;
     done = true;
+    clearInterval(poll);
+    clearTimeout(maxTimer);
     clearWatchdog();
     onEnd && onEnd();
   }
@@ -394,14 +396,16 @@ function speak(text, onEnd) {
   utt.onerror = finish;
   synth.speak(utt);
 
-  // Polling yedek: her 600ms'de synth.speaking kontrol et
-  // onend tetiklenmese bile çalışır
+  // Polling: TTS önce başlamalı (wasSpeaking), sonra bitişi yakala
+  // Race condition önlemi: 600ms öncesi false pozitif sayılmaz
+  let wasSpeaking = false;
   const poll = setInterval(() => {
-    if (!synth.speaking) { clearInterval(poll); finish(); }
-  }, 600);
+    if (synth.speaking) { wasSpeaking = true; return; }
+    if (wasSpeaking) { finish(); }
+  }, 500);
 
-  // Maksimum 20sn — her koşulda idle'a döner
-  setTimeout(() => { clearInterval(poll); finish(); }, 20000);
+  // Her koşulda 25sn sonra serbest bırak
+  const maxTimer = setTimeout(finish, 25000);
 }
 
 // ── GREETING ──
