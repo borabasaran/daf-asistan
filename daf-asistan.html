@@ -197,6 +197,12 @@
       <span id="i-spin" class="spin" style="display:none;font-size:24px;line-height:1;">⟳</span>
     </button>
     <div id="hint">Basılı tut → konuş → bırak</div>
+    <div style="display:flex;gap:8px;width:100%;max-width:400px;padding:0 4px;">
+      <input id="textIn" type="text" placeholder="Yazarak da devam edebilirsin…" autocomplete="off"
+        style="flex:1;padding:9px 12px;background:#1e293b;border:1px solid rgba(255,255,255,0.09);border-radius:8px;color:#f1f5f9;font-size:13.5px;outline:none;font-family:inherit;"
+        onkeydown="if(event.key==='Enter')sendText()" />
+      <button onclick="sendText()" style="padding:9px 14px;background:#fbbf24;color:#0f172a;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;touch-action:manipulation;">→</button>
+    </div>
     <button id="reset-btn" onpointerdown="doReset()">↺ Sıfırla</button>
   </div>
 </div>
@@ -242,6 +248,7 @@ let history = [];
 let appStatus = 'idle';
 let rec = null;
 let collected = '';
+let lastInterim = '';
 let watchdog = null;
 const synth = window.speechSynthesis;
 let deVoice = null;
@@ -459,9 +466,14 @@ function pressMic() {
 function releaseMic() {
   if (appStatus !== 'listening') return;
   if (rec) { try { rec.stop(); } catch(e){} rec = null; }
-  const text = collected.trim();
+  const text = (collected || lastInterim).trim();
+  lastInterim = '';
   setLive('');
-  if (!text) { setStatus('idle'); return; }
+  if (!text) {
+    showErr('Ses anlaşılamadı — yavaşça ve net konuş, ya da aşağıdan yaz.');
+    setStatus('idle');
+    return;
+  }
   addMsg('user', text);
   setStatus('thinking');
   callGroq(text)
@@ -477,6 +489,21 @@ function releaseMic() {
       showErr('Yanıt alınamadı: ' + err.message);
       setStatus('idle');
     });
+}
+
+// ── TEXT INPUT ──
+function sendText() {
+  const inp = document.getElementById('textIn');
+  const text = inp.value.trim();
+  if (!text || appStatus === 'thinking' || appStatus === 'listening') return;
+  inp.value = '';
+  if (appStatus === 'speaking') { synth.cancel(); }
+  showErr('');
+  addMsg('user', text);
+  setStatus('thinking');
+  callGroq(text)
+    .then(reply => { clearWatchdog(); addMsg('bot', reply); setStatus('speaking'); speak(reply, () => setStatus('idle')); })
+    .catch(err => { clearWatchdog(); if (history.length && history[history.length-1].role==='user') history.pop(); showErr('Yanıt alınamadı: ' + err.message); setStatus('idle'); });
 }
 
 // ── RESET ──
